@@ -338,12 +338,18 @@ def register_recipe_tools(mcp: FastMCP, mealie: MealieFetcher) -> None:
         Returns:
             Dict[str, Any]: The created recipe details.
         """
+        content = content.strip() if isinstance(content, str) else content
+        url = url.strip() if isinstance(url, str) else url
+        if not content and not url and not images:
+            raise ToolError("At least one of content, url, or images must be provided")
+        if images is not None and len(images) == 0:
+            images = None
         try:
             logger.info(
                 {
                     "message": "Importing recipe with AI",
                     "url": url,
-                    "has_content": content is not None,
+                    "has_content": bool(content),
                     "image_count": len(images) if images else 0,
                 }
             )
