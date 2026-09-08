@@ -1,6 +1,9 @@
 """Tests for the recipe-authoring tools (structured ingredients, full create,
 patch fields, concise output)."""
 
+import pytest
+from mcp.server.fastmcp.exceptions import ToolError
+
 
 async def test_create_recipe_accepts_flat_and_structured(invoke, fetcher):
     await invoke(
@@ -120,3 +123,50 @@ async def test_get_recipe_concise_includes_orgurl_tags_tools(invoke, fetcher):
     assert out["orgURL"] == "https://example.com/r"
     assert out["tags"] == [{"id": "t1", "name": "Quick", "slug": "quick"}]
     assert out["tools"][0]["name"] == "Pfanne"
+
+
+# --- import_recipe_with_ai: request shape and validation --------------------
+
+
+async def test_import_recipe_with_ai_content_only(invoke, fetcher):
+    await invoke("import_recipe_with_ai", content="2 eggs, fry them")
+    body = fetcher.last("POST", "/api/recipes/create/ai")["json"]
+    assert body == {"content": "2 eggs, fry them"}
+
+
+async def test_import_recipe_with_ai_url_only(invoke, fetcher):
+    await invoke("import_recipe_with_ai", url="https://example.com/recipe")
+    body = fetcher.last("POST", "/api/recipes/create/ai")["json"]
+    assert body == {"url": "https://example.com/recipe"}
+
+
+async def test_import_recipe_with_ai_images_only(invoke, fetcher):
+    await invoke("import_recipe_with_ai", images=["base64-image-data"])
+    body = fetcher.last("POST", "/api/recipes/create/ai")["json"]
+    assert body == {"images": ["base64-image-data"]}
+
+
+async def test_import_recipe_with_ai_omits_optional_fields_when_none(invoke, fetcher):
+    await invoke("import_recipe_with_ai", content="raw text")
+    body = fetcher.last("POST", "/api/recipes/create/ai")["json"]
+    assert "url" not in body
+    assert "translateLanguage" not in body
+    assert "createNewOrganizers" not in body
+    assert "images" not in body
+
+
+async def test_import_recipe_with_ai_includes_optional_fields_when_set(invoke, fetcher):
+    await invoke(
+        "import_recipe_with_ai",
+        content="raw text",
+        translate_language="en",
+        create_new_organizers=True,
+    )
+    body = fetcher.last("POST", "/api/recipes/create/ai")["json"]
+    assert body["translateLanguage"] == "en"
+    assert body["createNewOrganizers"] is True
+
+
+async def test_import_recipe_with_ai_requires_at_least_one_input(invoke, fetcher):
+    with pytest.raises(ToolError):
+        await invoke("import_recipe_with_ai")
