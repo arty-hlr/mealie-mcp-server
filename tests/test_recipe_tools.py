@@ -168,5 +168,6 @@ async def test_import_recipe_with_ai_includes_optional_fields_when_set(invoke, f
 
 
 async def test_import_recipe_with_ai_requires_at_least_one_input(invoke, fetcher):
-    with pytest.raises(ToolError):
+    with pytest.raises(ToolError) as excinfo:
         await invoke("import_recipe_with_ai")
+    assert "At least one of 'content', 'url', or 'images' must be provided." in str(excinfo.value)
