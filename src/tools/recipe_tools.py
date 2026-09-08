@@ -353,13 +353,14 @@ def register_recipe_tools(mcp: FastMCP, mealie: MealieFetcher) -> None:
                     "image_count": len(images) if images else 0,
                 }
             )
-            return mealie.import_recipe_with_ai(
+            slug = mealie.import_recipe_with_ai(
                 content=content,
                 url=url,
                 translate_language=translate_language,
                 create_new_organizers=create_new_organizers,
                 images=images,
             )
+            return mealie.get_recipe(slug)
         except Exception as e:
             error_msg = f"Error importing recipe with AI: {str(e)}"
             logger.error({"message": error_msg})
