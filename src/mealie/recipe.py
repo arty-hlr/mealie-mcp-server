@@ -148,7 +148,7 @@ class RecipeMixin:
         translate_language: Optional[str] = None,
         create_new_organizers: Optional[bool] = None,
         images: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+    ) -> str:
         """Create a recipe using AI from raw text, a URL, and/or images
 
         Args:
@@ -159,7 +159,7 @@ class RecipeMixin:
             images: List of image data (e.g. base64-encoded strings) to extract a recipe from
 
         Returns:
-            JSON response containing the newly created recipe details
+            Slug of the newly created recipe
         """
         payload = {
             "content": content,
