@@ -315,6 +315,54 @@ def register_recipe_tools(mcp: FastMCP, mealie: MealieFetcher) -> None:
             raise ToolError(error_msg)
 
     @mcp.tool()
+    def import_recipe_with_ai(
+        content: Optional[str] = None,
+        url: Optional[str] = None,
+        translate_language: Optional[str] = None,
+        create_new_organizers: Optional[bool] = None,
+        images: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Import/create a recipe using Mealie's AI extraction.
+
+        Give it raw text, a URL, and/or images and Mealie's AI will extract a
+        structured recipe (name, ingredients, instructions, etc.). At least one
+        of content, url, or images should be provided.
+
+        Args:
+            content: Raw text to extract a recipe from (e.g. a pasted recipe or email).
+            url: Source URL to extract a recipe from.
+            translate_language: Language code to translate the extracted recipe into (e.g. "en").
+            create_new_organizers: If True, allow the AI to create new tags/categories.
+            images: List of image data (e.g. base64-encoded strings) to extract a recipe from.
+
+        Returns:
+            Dict[str, Any]: The created recipe details.
+        """
+        try:
+            logger.info(
+                {
+                    "message": "Importing recipe with AI",
+                    "url": url,
+                    "has_content": content is not None,
+                    "image_count": len(images) if images else 0,
+                }
+            )
+            return mealie.import_recipe_with_ai(
+                content=content,
+                url=url,
+                translate_language=translate_language,
+                create_new_organizers=create_new_organizers,
+                images=images,
+            )
+        except Exception as e:
+            error_msg = f"Error importing recipe with AI: {str(e)}"
+            logger.error({"message": error_msg})
+            logger.debug(
+                {"message": "Error traceback", "traceback": traceback.format_exc()}
+            )
+            raise ToolError(error_msg)
+
+    @mcp.tool()
     def update_recipe(
         slug: str,
         ingredients: List[Union[str, RecipeIngredientInput]],

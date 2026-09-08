@@ -141,6 +141,38 @@ class RecipeMixin:
             json={"url": url, "includeTags": include_tags},
         )
 
+    def import_recipe_with_ai(
+        self,
+        content: Optional[str] = None,
+        url: Optional[str] = None,
+        translate_language: Optional[str] = None,
+        create_new_organizers: Optional[bool] = None,
+        images: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Create a recipe using AI from raw text, a URL, and/or images
+
+        Args:
+            content: Raw text content to extract a recipe from
+            url: Source URL to extract a recipe from
+            translate_language: Language code to translate the extracted recipe into
+            create_new_organizers: If True, allow the AI to create new tags/categories
+            images: List of image data (e.g. base64-encoded strings) to extract a recipe from
+
+        Returns:
+            JSON response containing the newly created recipe details
+        """
+        payload = {
+            "content": content,
+            "url": url,
+            "translateLanguage": translate_language,
+            "createNewOrganizers": create_new_organizers,
+            "images": images,
+        }
+        payload = {k: v for k, v in payload.items() if v is not None}
+
+        logger.info({"message": "Importing recipe with AI", "url": url})
+        return self._handle_request("POST", "/api/recipes/create/ai", json=payload)
+
     def patch_recipe(self, slug: str, recipe_data: Dict[str, Any]) -> Dict[str, Any]:
         """Partially update a recipe (only updates provided fields)
 
